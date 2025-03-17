@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Result};
 use actix_web::middleware::Logger;
 use base64::{Engine as _, engine::general_purpose};
 use chrono::Utc;
@@ -7,9 +7,9 @@ use serde_json::Value;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
-use crate::domain::{auctions, Auction, AuctionId, Bid, Command, CommandSuccess, User, Repository, handle};
+use crate::domain::{auctions, AuctionId, Bid, Command, User, handle};
 use crate::domain::states::{get_bids, try_get_amount_and_winner};
-use crate::money::{Amount, Currency};
+use crate::money::Amount;
 use super::types::{AddAuctionRequest, ApiError, AppState, AuctionBid, AuctionDetail, AuctionItem, BidRequest};
 
 // Initialize application state

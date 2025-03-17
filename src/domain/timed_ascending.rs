@@ -4,7 +4,7 @@ use std::fmt;
 use std::str::FromStr;
 use crate::money::{Amount, Currency};
 use super::bids::Bid;
-use super::core::{AuctionId, Errors, UserId};
+use super::core::{Errors, UserId};
 use super::states::State;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

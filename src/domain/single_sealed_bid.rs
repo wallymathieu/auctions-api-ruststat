@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
 use super::bids::Bid;
-use super::core::{AuctionId, Errors, UserId};
+use super::core::{Errors, UserId};
 use super::states::State;
 use crate::money::Amount;
 

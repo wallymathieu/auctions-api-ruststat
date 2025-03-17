@@ -1,10 +1,8 @@
-use actix_web::web;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
 
-use crate::domain::{Auction, AuctionId, AuctionState, AuctionType, Repository, User};
+use crate::domain::{Auction, AuctionId, AuctionType, Repository, User};
 use crate::money::{Currency, Amount};
 use crate::domain::timed_ascending;
 
