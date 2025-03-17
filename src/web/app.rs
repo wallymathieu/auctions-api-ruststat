@@ -1,9 +1,9 @@
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Result};
 use actix_web::middleware::Logger;
 use base64::{Engine as _, engine::general_purpose};
-use chrono::Utc;
 use log::info;
 use serde_json::Value;
+use time::OffsetDateTime;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
@@ -127,7 +127,7 @@ async fn create_auction(
 ) -> Result<HttpResponse> {
     with_auth(req, |user| {
         let auction = auction_req.to_auction(user);
-        let now = Utc::now();
+        let now = OffsetDateTime::now_utc();
         let command = Command::AddAuction {
             timestamp: now,
             auction: auction.clone(),
@@ -157,7 +157,7 @@ async fn place_bid(
     let auction_id = path.into_inner();
     
     with_auth(req, |user| {
-        let now = Utc::now();
+        let now = OffsetDateTime::now_utc();
         
         // Determine the currency from the auction
         let currency = {

@@ -35,7 +35,8 @@ pub fn handle(command: Command, mut repository: Repository) -> Result<(CommandSu
             if !repository.contains_key(&auction_id) {
                 let empty = empty_state(&auction);
                 repository.insert(auction_id, (auction.clone(), empty));
-                Ok((CommandSuccess::AuctionAdded { timestamp, auction }, repository))
+                
+                Ok((CommandSuccess::AuctionAdded { timestamp:timestamp, auction }, repository))
             } else {
                 Err(HandleError::from(Errors::AuctionAlreadyExists(auction_id)))
             }

@@ -5,7 +5,7 @@ use auction_site::domain::{
     AuctionState, empty_state
 };
 use auction_site::money::{Amount, Currency};
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use time::{macros::datetime, Duration, OffsetDateTime};
 
 // Sample data for tests
 fn sample_auction_id() -> i64 {
@@ -16,16 +16,16 @@ fn sample_title() -> String {
     "auction".to_string()
 }
 
-fn sample_starts_at() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 1, 1, 8, 28, 0).unwrap()
+fn sample_starts_at() -> OffsetDateTime {
+    datetime!(2016-01-01 8:28 UTC)
 }
 
-fn sample_ends_at() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 2, 1, 8, 28, 0).unwrap()
+fn sample_ends_at() -> OffsetDateTime {
+    datetime!(2016-02-01 8:28 UTC)
 }
 
-fn sample_bid_time() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 1, 15, 8, 28, 0).unwrap()
+fn sample_bid_time() -> OffsetDateTime {
+    datetime!(2016-01-15 8:28 UTC)
 }
 
 fn sample_seller() -> User {

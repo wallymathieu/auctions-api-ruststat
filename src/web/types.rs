@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use std::sync::{Arc, Mutex};
 
 use crate::domain::{Auction, AuctionId, AuctionType, Repository, User};
@@ -21,11 +21,11 @@ pub struct BidRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AddAuctionRequest {
     pub id: AuctionId,
-    #[serde(rename = "startsAt")]
-    pub starts_at: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339", rename = "startsAt")]
+    pub starts_at: OffsetDateTime,
     pub title: String,
-    #[serde(rename = "endsAt")]
-    pub ends_at: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339", rename = "endsAt")]
+    pub ends_at: OffsetDateTime,
     pub currency: Option<Currency>,
     pub typ: Option<AuctionType>,
 }
@@ -52,10 +52,11 @@ impl AddAuctionRequest {
 #[derive(Debug, Serialize)]
 pub struct AuctionItem {
     pub id: AuctionId,
-    #[serde(rename = "startsAt")]
-    pub starts_at: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339", rename = "startsAt")]
+    pub starts_at: OffsetDateTime,
     pub title: String,
-    pub expiry: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339")]
+    pub expiry: OffsetDateTime,
     pub currency: Currency,
 }
 
@@ -81,10 +82,11 @@ pub struct AuctionBid {
 pub struct AuctionDetail {
     // Base auction fields
     pub id: AuctionId,
-    #[serde(rename = "startsAt")]
-    pub starts_at: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339", rename = "startsAt")]
+    pub starts_at: OffsetDateTime,
     pub title: String,
-    pub expiry: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339")]
+    pub expiry: OffsetDateTime,
     pub currency: Currency,
     
     // Additional detail fields

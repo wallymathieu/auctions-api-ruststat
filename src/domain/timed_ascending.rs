@@ -1,5 +1,5 @@
-use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
+use time::{Duration, OffsetDateTime};
 use std::fmt;
 use std::str::FromStr;
 use crate::money::{Amount, Currency};
@@ -41,7 +41,7 @@ impl fmt::Display for Options {
             "English|{}|{}|{}",
             self.reserve_price,
             self.min_raise,
-            self.time_frame.num_seconds()
+            self.time_frame.whole_seconds()
         )
     }
 }
@@ -75,23 +75,23 @@ impl FromStr for Options {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TimedAscendingState {
     AwaitingStart {
-        start: DateTime<Utc>,
-        starting_expiry: DateTime<Utc>,
+        start: OffsetDateTime,
+        starting_expiry: OffsetDateTime,
         options: Options,
     },
     OnGoing {
         bids: Vec<Bid>,
-        next_expiry: DateTime<Utc>,
+        next_expiry: OffsetDateTime,
         options: Options,
     },
     HasEnded {
         bids: Vec<Bid>,
-        expiry: DateTime<Utc>,
+        expiry: OffsetDateTime,
         options: Options,
     },
 }
 
-pub fn empty_state(start: DateTime<Utc>, starting_expiry: DateTime<Utc>, options: Options) -> TimedAscendingState {
+pub fn empty_state(start: OffsetDateTime, starting_expiry: OffsetDateTime, options: Options) -> TimedAscendingState {
     TimedAscendingState::AwaitingStart {
         start,
         starting_expiry,
@@ -100,7 +100,7 @@ pub fn empty_state(start: DateTime<Utc>, starting_expiry: DateTime<Utc>, options
 }
 
 impl State for TimedAscendingState {
-    fn inc(&self, now: DateTime<Utc>) -> Self {
+    fn inc(&self, now: OffsetDateTime) -> Self {
         match self {
             TimedAscendingState::AwaitingStart { start, starting_expiry, options } => {
                 if now > *start {

@@ -2,20 +2,21 @@ use auction_site::domain::{AuctionType, Auction, User};
 use auction_site::domain::timed_ascending::Options as TAOptions;
 use auction_site::money::{Amount, Currency};
 use auction_site::web::types::{AddAuctionRequest, BidRequest};
-use chrono::{DateTime, TimeZone, Utc};
 use serde_json::json;
+use time::macros::datetime;
+use time::OffsetDateTime;
 
 // Sample data for tests
 fn sample_auction_id() -> i64 {
     1
 }
 
-fn sample_starts_at() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 1, 1, 0, 0, 0).unwrap()
+fn sample_starts_at() -> OffsetDateTime {
+    datetime!(2016-01-01 0:00 UTC)
 }
 
-fn sample_ends_at() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 2, 1, 0, 0, 0).unwrap()
+fn sample_ends_at() -> OffsetDateTime {
+    datetime!(2016-02-01 0:00 UTC)
 }
 
 fn sample_seller() -> User {

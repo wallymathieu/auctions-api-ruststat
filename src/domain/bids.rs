@@ -1,7 +1,6 @@
 
-// src/domain/bids.rs
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use crate::money::Amount;
 use super::core::{AuctionId, User};
 
@@ -9,6 +8,7 @@ use super::core::{AuctionId, User};
 pub struct Bid {
     pub for_auction: AuctionId,
     pub bidder: User,
-    pub at: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339")]
+    pub at: OffsetDateTime,
     pub bid_amount: Amount,
 }

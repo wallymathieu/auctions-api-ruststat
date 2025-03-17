@@ -1,6 +1,5 @@
-// src/domain/auctions.rs
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use core::fmt;
 use std::str::FromStr;
 use crate::money::Currency;
@@ -57,10 +56,11 @@ impl FromStr for AuctionType {
 pub struct Auction {
     #[serde(rename = "id")]
     pub auction_id: AuctionId,
-    #[serde(rename = "startsAt")]
-    pub starts_at: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339",rename = "startsAt")]
+    pub starts_at: OffsetDateTime,
     pub title: String,
-    pub expiry: DateTime<Utc>,
+    #[serde(with="time::serde::rfc3339")]
+    pub expiry: OffsetDateTime,
     #[serde(rename = "user")]
     pub seller: User,
     #[serde(rename = "type")]
@@ -106,7 +106,7 @@ pub fn empty_state(auction: &Auction) -> AuctionState {
 }
 
 impl State for AuctionState{
-    fn inc(&self, now: DateTime<Utc>) -> Self where Self: Sized {
+    fn inc(&self, now: OffsetDateTime) -> Self where Self: Sized {
         match self {
             AuctionState::SingleSealedBid(state) => {
                 AuctionState::SingleSealedBid(state.inc(now))

@@ -1,22 +1,21 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use super::auctions::Auction;
 use super::bids::Bid;
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "$type")]
 pub enum Command {
     #[serde(rename = "AddAuction")]
     AddAuction {
-        #[serde(rename = "at")]
-        timestamp: DateTime<Utc>,
+        #[serde(with="time::serde::rfc3339", rename = "at")]
+        timestamp: OffsetDateTime,
         auction: Auction,
     },
     
     #[serde(rename = "PlaceBid")]
     PlaceBid {
-        #[serde(rename = "at")]
-        timestamp: DateTime<Utc>,
+        #[serde(with="time::serde::rfc3339", rename = "at")]
+        timestamp: OffsetDateTime,
         bid: Bid,
     },
 }
@@ -26,15 +25,15 @@ pub enum Command {
 pub enum CommandSuccess {
     #[serde(rename = "AuctionAdded")]
     AuctionAdded {
-        #[serde(rename = "at")]
-        timestamp: DateTime<Utc>,
+        #[serde(with="time::serde::rfc3339", rename = "at")]
+        timestamp: OffsetDateTime,
         auction: Auction,
     },
     
     #[serde(rename = "BidAccepted")]
     BidAccepted {
-        #[serde(rename = "at")]
-        timestamp: DateTime<Utc>,
+        #[serde(with="time::serde::rfc3339", rename = "at")]
+        timestamp: OffsetDateTime,
         bid: Bid,
     },
 }

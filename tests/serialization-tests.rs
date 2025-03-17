@@ -5,8 +5,10 @@ use auction_site::domain::{
 };
 use auction_site::money::{Amount, Currency};
 use auction_site::persistence::json_file::{read_commands, write_commands};
-use chrono::{DateTime, Duration, TimeZone, Utc};
 use serde_json::{from_str, to_string};
+use time::format_description::well_known::Rfc3339;
+use time::macros::datetime;
+use time::{Duration, OffsetDateTime};
 use std::str::FromStr;
 use std::fs;
 use std::path::Path;
@@ -20,17 +22,18 @@ fn sample_title() -> String {
     "auction".to_string()
 }
 
-fn sample_starts_at() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 1, 1, 8, 28, 0).unwrap()
+fn sample_starts_at() -> OffsetDateTime {
+    datetime!(2016-01-01 8:28 UTC)
 }
 
-fn sample_ends_at() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 2, 1, 8, 28, 0).unwrap()
+fn sample_ends_at() -> OffsetDateTime {
+    datetime!(2016-02-01 8:28 UTC)
 }
 
-fn sample_bid_time() -> DateTime<Utc> {
-    Utc.with_ymd_and_hms(2016, 2, 1, 7, 28, 0).unwrap()
+fn sample_bid_time() -> OffsetDateTime {
+    datetime!(2016-01-15 8:28 UTC)
 }
+
 
 fn sample_seller() -> User {
     User::BuyerOrSeller {
@@ -78,7 +81,7 @@ fn bid_1() -> Bid {
 #[test]
 fn test_read_json_commands() {
     // Read sample commands from file
-    let commands = read_commands("./test/samples/sample-commands.jsonl");
+    let commands = read_commands("./tests/samples/sample-commands.jsonl");
     assert!(commands.is_ok());
     assert!(!commands.unwrap().is_empty());
 }
@@ -156,7 +159,7 @@ fn test_add_auction_command_serialization() {
     // Verify it contains the expected data
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
     assert_eq!(json_value["$type"], "AddAuction");
-    assert_eq!(json_value["at"], sample_starts_at().to_rfc3339());
+    assert_eq!(json_value["at"], sample_starts_at().format(&Rfc3339).unwrap());
     
     // Deserialize back
     let deserialized: Command = from_str(&serialized).unwrap();
@@ -185,7 +188,7 @@ fn test_place_bid_command_serialization() {
     // Verify it contains the expected data
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
     assert_eq!(json_value["$type"], "PlaceBid");
-    assert_eq!(json_value["at"], sample_bid_time().to_rfc3339());
+    assert_eq!(json_value["at"], sample_bid_time().format(&Rfc3339).unwrap());
     
     // Deserialize back
     let deserialized: Command = from_str(&serialized).unwrap();

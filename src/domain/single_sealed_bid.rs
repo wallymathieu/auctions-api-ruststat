@@ -1,6 +1,5 @@
-// src/domain/single_sealed_bid.rs
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
@@ -48,17 +47,17 @@ impl FromStr for Options {
 pub enum SingleSealedBidState {
     AcceptingBids {
         bids: HashMap<UserId, Bid>,
-        expiry: DateTime<Utc>,
+        expiry: OffsetDateTime,
         options: Options,
     },
     DisclosingBids {
         bids: Vec<Bid>,
-        expiry: DateTime<Utc>,
+        expiry: OffsetDateTime,
         options: Options,
     },
 }
 
-pub fn empty_state(expiry: DateTime<Utc>, options: Options) -> SingleSealedBidState {
+pub fn empty_state(expiry: OffsetDateTime, options: Options) -> SingleSealedBidState {
     SingleSealedBidState::AcceptingBids {
         bids: HashMap::new(),
         expiry,
@@ -68,7 +67,7 @@ pub fn empty_state(expiry: DateTime<Utc>, options: Options) -> SingleSealedBidSt
 
 impl State for SingleSealedBidState{
 
-    fn inc(&self, now: DateTime<Utc>) -> Self {
+    fn inc(&self, now: OffsetDateTime) -> Self {
         match self {
             SingleSealedBidState::AcceptingBids { bids, expiry, options } => {
                 if now >= *expiry {

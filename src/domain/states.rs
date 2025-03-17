@@ -1,12 +1,12 @@
 // src/domain/states.rs
-use chrono::{DateTime, Utc};
+use time::OffsetDateTime;
 use crate::money::Amount;
 use super::bids::Bid;
 use super::core::{Errors, UserId};
 use super::AuctionState;
 
 pub trait State {
-    fn inc(&self, now: DateTime<Utc>) -> Self where Self: Sized;
+    fn inc(&self, now: OffsetDateTime) -> Self where Self: Sized;
     fn add_bid(&self, bid: Bid) -> (Self, Result<(), Errors>) where Self: Sized;
     fn get_bids(&self) -> Vec<Bid>;
     fn try_get_amount_and_winner(&self) -> Option<(Amount, UserId)>;
@@ -14,7 +14,7 @@ pub trait State {
 }
 
 // Helper functions to work with AuctionState
-pub fn inc(state: &AuctionState, now: DateTime<Utc>) -> AuctionState {
+pub fn inc(state: &AuctionState, now: OffsetDateTime) -> AuctionState {
     State::inc(state, now)
 }
 
