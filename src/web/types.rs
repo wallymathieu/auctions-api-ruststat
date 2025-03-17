@@ -1,0 +1,97 @@
+use actix_web::web;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+
+use crate::domain::{Auction, AuctionId, AuctionState, AuctionType, Repository, User};
+use crate::money::{Currency, Amount};
+use crate::domain::timed_ascending;
+
+pub type AppState = Arc<Mutex<Repository>>;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ApiError {
+    pub message: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BidRequest {
+    pub amount: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddAuctionRequest {
+    pub id: AuctionId,
+    #[serde(rename = "startsAt")]
+    pub starts_at: DateTime<Utc>,
+    pub title: String,
+    #[serde(rename = "endsAt")]
+    pub ends_at: DateTime<Utc>,
+    pub currency: Option<Currency>,
+    pub typ: Option<AuctionType>,
+}
+
+impl AddAuctionRequest {
+    pub fn to_auction(&self, seller: User) -> Auction {
+        let currency = self.currency.unwrap_or(Currency::VAC);
+        let typ = self.typ.clone().unwrap_or_else(|| {
+            AuctionType::TimedAscending(timed_ascending::Options::default_options(currency))
+        });
+        
+        Auction {
+            auction_id: self.id,
+            starts_at: self.starts_at,
+            title: self.title.clone(),
+            expiry: self.ends_at,
+            seller,
+            typ,
+            auction_currency: currency,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct AuctionItem {
+    pub id: AuctionId,
+    #[serde(rename = "startsAt")]
+    pub starts_at: DateTime<Utc>,
+    pub title: String,
+    pub expiry: DateTime<Utc>,
+    pub currency: Currency,
+}
+
+impl From<&Auction> for AuctionItem {
+    fn from(auction: &Auction) -> Self {
+        AuctionItem {
+            id: auction.auction_id,
+            starts_at: auction.starts_at,
+            title: auction.title.clone(),
+            expiry: auction.expiry,
+            currency: auction.auction_currency,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct AuctionBid {
+    pub amount: Amount,
+    pub bidder: User,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AuctionDetail {
+    // Base auction fields
+    pub id: AuctionId,
+    #[serde(rename = "startsAt")]
+    pub starts_at: DateTime<Utc>,
+    pub title: String,
+    pub expiry: DateTime<Utc>,
+    pub currency: Currency,
+    
+    // Additional detail fields
+    pub bids: Vec<AuctionBid>,
+    pub winner: Option<String>,
+    #[serde(rename = "winnerPrice")]
+    pub winner_price: Option<Amount>,
+}

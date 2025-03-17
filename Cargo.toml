@@ -1,0 +1,19 @@
+[package]
+name = "auction-site"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "An auction site implementation in Rust"
+license = "MIT"
+
+[dependencies]
+actix-web = "4.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.3", features = ["v4", "serde"] }
+base64 = "0.21"
+tokio = { version = "1.28", features = ["full"] }
+thiserror = "1.0"
+log = "0.4"
+env_logger = "0.10"
