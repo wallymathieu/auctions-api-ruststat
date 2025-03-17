@@ -80,9 +80,10 @@ fn bid_1() -> Bid {
 
 #[test]
 fn test_read_json_commands() {
+
     // Read sample commands from file
     let commands = read_commands("./tests/samples/sample-commands.jsonl");
-    assert!(commands.is_ok());
+    assert!(commands.is_ok(), "Failed to read commands from file {:?}", commands.err());
     assert!(!commands.unwrap().is_empty());
 }
 
