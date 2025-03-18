@@ -1,83 +1,18 @@
 use auction_site::domain::{
-    AuctionType, Auction, User, Bid, Command, CommandSuccess,
+    AuctionType, User, Command, CommandSuccess,
     timed_ascending::Options as TAOptions,
-    single_sealed_bid::Options as SBOptions,
 };
-use auction_site::money::{Amount, Currency};
+use auction_site::money::Amount;
 use auction_site::persistence::json_file::{read_commands, write_commands};
 use serde_json::{from_str, to_string};
 use time::format_description::well_known::Rfc3339;
-use time::macros::datetime;
-use time::{Duration, OffsetDateTime};
+use time::Duration;
 use std::str::FromStr;
 use std::fs;
 use std::path::Path;
-
+#[path="utils/mod.rs"] mod utils;
+use utils::*;
 // Sample data for tests
-fn sample_auction_id() -> i64 {
-    1
-}
-
-fn sample_title() -> String {
-    "auction".to_string()
-}
-
-fn sample_starts_at() -> OffsetDateTime {
-    datetime!(2016-01-01 8:28 UTC)
-}
-
-fn sample_ends_at() -> OffsetDateTime {
-    datetime!(2016-02-01 8:28 UTC)
-}
-
-fn sample_bid_time() -> OffsetDateTime {
-    datetime!(2016-01-15 8:28 UTC)
-}
-
-
-fn sample_seller() -> User {
-    User::BuyerOrSeller {
-        user_id: "Sample_Seller".to_string(),
-        name: "Seller".to_string(),
-    }
-}
-
-fn buyer_1() -> User {
-    User::BuyerOrSeller {
-        user_id: "Buyer_1".to_string(),
-        name: "Buyer 1".to_string(),
-    }
-}
-
-fn sek(value: i64) -> Amount {
-    Amount::new(Currency::SEK, value)
-}
-
-fn vac(value: i64) -> Amount {
-    Amount::new(Currency::VAC, value)
-}
-
-fn sample_auction() -> Auction {
-    Auction {
-        auction_id: sample_auction_id(),
-        title: sample_title(),
-        starts_at: sample_starts_at(),
-        expiry: sample_ends_at(),
-        seller: sample_seller(),
-        auction_currency: Currency::SEK,
-        typ: AuctionType::SingleSealedBid(SBOptions::Vickrey),
-    }
-}
-
-fn bid_1() -> Bid {
-    Bid {
-        for_auction: sample_auction_id(),
-        bidder: buyer_1(),
-        at: sample_starts_at() + Duration::seconds(1),
-        bid_amount: sek(10),
-    }
-}
-
 #[test]
 fn test_read_json_commands() {
 
@@ -148,7 +83,7 @@ fn test_amount_serialization() {
 
 #[test]
 fn test_add_auction_command_serialization() {
-    let auction = sample_auction();
+    let auction = sample_vickrey_auction();
     let add_auction = Command::AddAuction {
         timestamp: sample_starts_at(),
         auction: auction.clone(),
@@ -207,7 +142,7 @@ fn test_place_bid_command_serialization() {
 #[test]
 fn test_command_success_serialization() {
     // AuctionAdded success
-    let auction = sample_auction();
+    let auction = sample_vickrey_auction();
     let auction_added = CommandSuccess::AuctionAdded {
         timestamp: sample_starts_at(),
         auction: auction.clone(),
@@ -264,7 +199,7 @@ fn test_write_and_read_commands() {
     let test_file = "./test_commands.jsonl";
     
     // Create commands to write
-    let auction = sample_auction();
+    let auction = sample_vickrey_auction();
     let add_auction = Command::AddAuction {
         timestamp: sample_starts_at(),
         auction: auction.clone(),

@@ -1,38 +1,18 @@
-use auction_site::domain::{AuctionType, Auction, User};
+use auction_site::domain::{AuctionType, Auction};
 use auction_site::domain::timed_ascending::Options as TAOptions;
 use auction_site::money::{Amount, Currency};
 use auction_site::web::types::{AddAuctionRequest, BidRequest};
 use serde_json::json;
-use time::macros::datetime;
-use time::OffsetDateTime;
-
-// Sample data for tests
-fn sample_auction_id() -> i64 {
-    1
-}
-
-fn sample_starts_at() -> OffsetDateTime {
-    datetime!(2016-01-01 0:00 UTC)
-}
-
-fn sample_ends_at() -> OffsetDateTime {
-    datetime!(2016-02-01 0:00 UTC)
-}
-
-fn sample_seller() -> User {
-    User::BuyerOrSeller {
-        user_id: "a1".to_string(),
-        name: "Test".to_string(),
-    }
-}
+#[path="utils/mod.rs"] mod utils;
+use utils::*;
 
 #[test]
 fn test_auction_request_deserialization() {
     // Create a JSON representation of an auction request
     let json_data = json!({
         "id": 1,
-        "startsAt": "2016-01-01T00:00:00.000Z",
-        "endsAt": "2016-02-01T00:00:00.000Z",
+        "startsAt": "2016-01-01T08:28:00.000Z",
+        "endsAt": "2016-02-01T08:28:00.000Z",
         "title": "First auction"
     });
     
@@ -114,10 +94,10 @@ fn test_auction_serialization() {
     
     // Verify serialized format
     assert_eq!(json["id"], json!(1), "id {:?}", json["id"]);
-    assert_eq!(json["startsAt"], json!("2016-01-01T00:00:00Z"), "startsAt {:?}", json["startsAt"]);
+    assert_eq!(json["startsAt"], json!("2016-01-01T08:28:00Z"), "startsAt {:?}", json["startsAt"]);
     assert_eq!(json["title"], json!("First auction"), "title {:?}", json["title"]);
-    assert_eq!(json["expiry"], json!("2016-02-01T00:00:00Z"), "expiry {:?}", json["expiry"]);
-    assert_eq!(json["user"], json!("BuyerOrSeller|a1|Test"), "user {:?}", json["user"]);
+    assert_eq!(json["expiry"], json!("2016-02-01T08:28:00Z"), "expiry {:?}", json["expiry"]);
+    assert_eq!(json["user"], json!("BuyerOrSeller|Sample_Seller|Seller"), "user {:?}", json["user"]);
     assert_eq!(json["currency"], json!("VAC"), "currency {:?}", json["currency"]);
     assert!(json["type"].as_str().unwrap().starts_with("English|"));
 }

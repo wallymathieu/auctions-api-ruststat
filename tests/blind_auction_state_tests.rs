@@ -1,119 +1,13 @@
 use auction_site::domain::{
-    AuctionType, Auction, Bid, User,
-    single_sealed_bid::{Options as SBOptions, SingleSealedBidState as SBState},
+    Bid, single_sealed_bid::{Options as SBOptions, SingleSealedBidState as SBState},
     states::State,
     AuctionState, empty_state
 };
-use auction_site::money::{Amount, Currency};
-use time::{macros::datetime, Duration, OffsetDateTime};
-
+use time::Duration;
+#[path="utils/mod.rs"] mod utils;
+use utils::*;
 // Sample data for tests
-fn sample_auction_id() -> i64 {
-    1
-}
 
-fn sample_title() -> String {
-    "auction".to_string()
-}
-
-fn sample_starts_at() -> OffsetDateTime {
-    datetime!(2016-01-01 8:28 UTC)
-}
-
-fn sample_ends_at() -> OffsetDateTime {
-    datetime!(2016-02-01 8:28 UTC)
-}
-
-fn sample_bid_time() -> OffsetDateTime {
-    datetime!(2016-01-15 8:28 UTC)
-}
-
-fn sample_seller() -> User {
-    User::BuyerOrSeller {
-        user_id: "Sample_Seller".to_string(),
-        name: "Seller".to_string(),
-    }
-}
-
-fn buyer_1() -> User {
-    User::BuyerOrSeller {
-        user_id: "Buyer_1".to_string(),
-        name: "Buyer 1".to_string(),
-    }
-}
-
-fn buyer_2() -> User {
-    User::BuyerOrSeller {
-        user_id: "Buyer_2".to_string(),
-        name: "Buyer 2".to_string(),
-    }
-}
-
-fn sek(value: i64) -> Amount {
-    Amount::new(Currency::SEK, value)
-}
-
-fn bid_amount_1() -> Amount {
-    sek(10)
-}
-
-fn bid_1() -> Bid {
-    Bid {
-        for_auction: sample_auction_id(),
-        bidder: buyer_1(),
-        at: sample_starts_at() + Duration::seconds(1),
-        bid_amount: bid_amount_1(),
-    }
-}
-
-fn bid_amount_2() -> Amount {
-    sek(12)
-}
-
-fn bid_2() -> Bid {
-    Bid {
-        for_auction: sample_auction_id(),
-        bidder: buyer_2(),
-        at: sample_starts_at() + Duration::seconds(2),
-        bid_amount: bid_amount_2(),
-    }
-}
-
-fn sample_blind_auction() -> Auction {
-    Auction {
-        auction_id: sample_auction_id(),
-        title: sample_title(),
-        starts_at: sample_starts_at(),
-        expiry: sample_ends_at(),
-        seller: sample_seller(),
-        auction_currency: Currency::SEK,
-        typ: AuctionType::SingleSealedBid(SBOptions::Blind),
-    }
-}
-
-// Test that verifies state increment behavior
-fn test_increment_spec(state: &SBState) {
-    // Can increment twice
-    let s = state.inc(sample_bid_time());
-    let s2 = s.inc(sample_bid_time());
-    assert_eq!(s, s2);
-
-    // Won't end just after start
-    let state = state.inc(sample_starts_at() + Duration::seconds(1));
-    assert_eq!(state.has_ended(), false);
-
-    // Won't end just before end
-    let state = state.inc(sample_ends_at() - Duration::seconds(1));
-    assert_eq!(state.has_ended(), false);
-
-    // Won't end just before start
-    let state = state.inc(sample_starts_at() - Duration::seconds(1));
-    assert_eq!(state.has_ended(), false);
-
-    // Will have ended just after end
-    let state = state.inc(sample_ends_at() + Duration::seconds(1));
-    assert_eq!(state.has_ended(), true);
-}
 
 #[test]
 fn test_blind_auction_states() {
