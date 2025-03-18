@@ -202,7 +202,7 @@ async fn place_bid(
 // Configure routes
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("/api")
+        web::scope("")
             .route("/auctions", web::get().to(get_auctions))
             .route("/auction/{id}", web::get().to(get_auction))
             .route("/auction", web::post().to(create_auction))
