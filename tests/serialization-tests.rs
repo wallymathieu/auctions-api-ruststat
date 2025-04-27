@@ -1,5 +1,5 @@
 use auction_site::domain::{
-    AuctionType, User, Command, CommandSuccess,
+    AuctionType, User, Command, Event,
     timed_ascending::Options as TAOptions,
 };
 use auction_site::money::Amount;
@@ -142,7 +142,7 @@ fn test_place_bid_command_serialization() {
 fn test_command_success_serialization() {
     // AuctionAdded success
     let auction = sample_vickrey_auction();
-    let auction_added = CommandSuccess::AuctionAdded {
+    let auction_added = Event::AuctionAdded {
         timestamp: sample_starts_at(),
         auction: auction.clone(),
     };
@@ -155,11 +155,11 @@ fn test_command_success_serialization() {
     assert_eq!(json_value["$type"], "AuctionAdded");
 
     // Deserialize back
-    let deserialized: CommandSuccess = from_str(&serialized).unwrap();
+    let deserialized: Event = from_str(&serialized).unwrap();
 
     // Verify it matches the original
     match deserialized {
-        CommandSuccess::AuctionAdded { timestamp, auction: deserialized_auction } => {
+        Event::AuctionAdded { timestamp, auction: deserialized_auction } => {
             assert_eq!(timestamp, sample_starts_at());
             assert_eq!(deserialized_auction, auction);
         },
@@ -168,7 +168,7 @@ fn test_command_success_serialization() {
 
     // BidAccepted success
     let bid = bid_1();
-    let bid_accepted = CommandSuccess::BidAccepted {
+    let bid_accepted = Event::BidAccepted {
         timestamp: sample_bid_time(),
         bid: bid.clone(),
     };
@@ -181,11 +181,11 @@ fn test_command_success_serialization() {
     assert_eq!(json_value["$type"], "BidAccepted");
 
     // Deserialize back
-    let deserialized: CommandSuccess = from_str(&serialized).unwrap();
+    let deserialized: Event = from_str(&serialized).unwrap();
 
     // Verify it matches the original
     match deserialized {
-        CommandSuccess::BidAccepted { timestamp, bid: deserialized_bid } => {
+        Event::BidAccepted { timestamp, bid: deserialized_bid } => {
             assert_eq!(timestamp, sample_bid_time());
             assert_eq!(deserialized_bid, bid);
         },

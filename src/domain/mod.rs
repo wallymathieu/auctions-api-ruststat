@@ -28,31 +28,31 @@ pub enum HandleError {
     AuctionError(#[from] Errors),
 }
 
-pub fn handle(command: Command, mut repository: Repository) -> Result<(CommandSuccess, Repository), HandleError> {
+pub fn handle(command: Command, mut repository: Repository) -> Result<(Event, Repository), HandleError> {
     match command {
         Command::AddAuction { timestamp, auction } => {
             let auction_id = auction.auction_id;
             if !repository.contains_key(&auction_id) {
                 let empty = empty_state(&auction);
                 repository.insert(auction_id, (auction.clone(), empty));
-                
-                Ok((CommandSuccess::AuctionAdded { timestamp:timestamp, auction }, repository))
+
+                Ok((Event::AuctionAdded { timestamp:timestamp, auction }, repository))
             } else {
                 Err(HandleError::from(Errors::AuctionAlreadyExists(auction_id)))
             }
         }
-        
+
         Command::PlaceBid { timestamp, bid } => {
             let auction_id = bid.for_auction;
             match repository.get(&auction_id) {
                 Some((auction, state)) => {
                     validate_bid(&bid, auction)?;
-                    
-                    let (next_auction_state, bid_result) = add_bid(bid.clone(), state.clone());
+
+                    let (next_auction_state, bid_result) = State::add_bid(&state.clone(), bid.clone());
                     bid_result?;
-                    
+
                     repository.insert(auction_id, (auction.clone(), next_auction_state));
-                    Ok((CommandSuccess::BidAccepted { timestamp, bid }, repository))
+                    Ok((Event::BidAccepted { timestamp, bid }, repository))
                 }
                 None => Err(HandleError::from(Errors::UnknownAuction(auction_id))),
             }

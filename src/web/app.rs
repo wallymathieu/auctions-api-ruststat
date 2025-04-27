@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
 use crate::domain::{auctions, AuctionId, Bid, Command, User, handle};
-use crate::domain::states::{get_bids, try_get_amount_and_winner};
+use crate::domain::states::State;
 use crate::money::Amount;
 use super::types::{AddAuctionRequest, ApiError, AppState, AuctionBid, AuctionDetail, AuctionItem, BidRequest};
 
@@ -19,18 +19,18 @@ pub fn init_app_state() -> AppState {
 fn get_auth_user(req: &HttpRequest) -> Option<User> {
     let auth_header = req.headers().get("x-jwt-payload")?;
     let auth_str = auth_header.to_str().ok()?;
-    
+
     // Decode base64
     let decoded = general_purpose::STANDARD.decode(auth_str).ok()?;
     let json_str = String::from_utf8(decoded).ok()?;
-    
+
     // Parse JSON
     let json: Value = serde_json::from_str(&json_str).ok()?;
-    
+
     // Extract user fields
     let sub = json.get("sub")?.as_str()?;
     let u_typ = json.get("u_typ")?.as_str()?;
-    
+
     if u_typ == "0" {
         let name = json.get("name")?.as_str()?;
         Some(User::BuyerOrSeller {
@@ -69,7 +69,7 @@ async fn get_auctions(data: web::Data<AppState>) -> Result<HttpResponse> {
         .iter()
         .map(|a| AuctionItem::from(a))
         .collect();
-    
+
     Ok(HttpResponse::Ok().json(auction_list))
 }
 
@@ -80,23 +80,23 @@ async fn get_auction(
 ) -> Result<HttpResponse> {
     let auction_id = path.into_inner();
     let app_state = data.lock().unwrap();
-    
+
     if let Some((auction, auction_state)) = app_state.get(&auction_id) {
-        let bids = get_bids(auction_state);
-        let winner_and_price = try_get_amount_and_winner(auction_state);
-        
+        let bids = State::get_bids(auction_state);
+        let winner_and_price = State::try_get_amount_and_winner(auction_state);
+
         let auction_bids = bids.iter().map(|bid| {
             AuctionBid {
                 amount: bid.bid_amount,
                 bidder: bid.bidder.clone(),
             }
         }).collect();
-        
+
         let (winner, winner_price) = match winner_and_price {
             Some((amount, user_id)) => (Some(user_id), Some(amount)),
             None => (None, None),
         };
-        
+
         let detail = AuctionDetail {
             id: auction.auction_id,
             starts_at: auction.starts_at,
@@ -107,7 +107,7 @@ async fn get_auction(
             winner,
             winner_price: winner_price.map(|v| Amount::new(auction.auction_currency, v)),
         };
-        
+
         Ok(HttpResponse::Ok().json(detail))
     } else {
         let error = ApiError {
@@ -130,9 +130,9 @@ async fn create_auction(
             timestamp: now,
             auction: auction.clone(),
         };
-        
+
         let mut app_state = data.lock().unwrap();
-        
+
         match handle(command, app_state.clone()) {
             Ok((success, new_state)) => {
                 *app_state = new_state;
@@ -153,24 +153,24 @@ async fn place_bid(
     data: web::Data<AppState>
 ) -> Result<HttpResponse> {
     let auction_id = path.into_inner();
-    
+
     with_auth(req, |user| {
         let now = OffsetDateTime::now_utc();
-        
+
         let bid = Bid {
             for_auction: auction_id,
             bidder: user,
             at: now,
             bid_amount: bid_req.amount,
         };
-        
+
         let command = Command::PlaceBid {
             timestamp: now,
             bid,
         };
-        
+
         let mut app_state = data.lock().unwrap();
-        
+
         match handle(command, app_state.clone()) {
             Ok((success, new_state)) => {
                 *app_state = new_state;
