@@ -71,7 +71,7 @@ fn test_cannot_place_duplicate_bids() {
         for_auction: sample_auction_id(),
         bidder: buyer_1(), // Same bidder
         at: sample_bid_time(),
-        bid_amount: sek(15), // Different amount
+        bid_amount: 15, // Different amount
     };
     
     let (_, result) = state_with_bid.add_bid(duplicate_bid);
@@ -100,7 +100,7 @@ fn test_cannot_bid_after_end() {
         for_auction: sample_auction_id(),
         bidder: buyer_1(),
         at: sample_ends_at() + Duration::seconds(2),
-        bid_amount: sek(10),
+        bid_amount: 10,
     };
     
     let (_, result) = ended_state.add_bid(late_bid);

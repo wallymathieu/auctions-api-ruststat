@@ -1,6 +1,6 @@
 use auction_site::domain::{AuctionType, Auction};
 use auction_site::domain::timed_ascending::Options as TAOptions;
-use auction_site::money::{Amount, Currency};
+use auction_site::money::Currency;
 use auction_site::web::types::{AddAuctionRequest, BidRequest};
 use serde_json::json;
 #[path="utils/mod.rs"] mod utils;
@@ -34,8 +34,8 @@ fn test_auction_request_deserialization() {
     // Verify auction type is TimedAscending with default options
     match auction.typ {
         AuctionType::TimedAscending(options) => {
-            assert_eq!(options.reserve_price, Amount::new(Currency::VAC, 0));
-            assert_eq!(options.min_raise, Amount::new(Currency::VAC, 0));
+            assert_eq!(options.reserve_price, 0);
+            assert_eq!(options.min_raise, 0);
         },
         _ => panic!("Expected TimedAscending auction type"),
     }
@@ -86,7 +86,7 @@ fn test_auction_serialization() {
         expiry: sample_ends_at(),
         seller: sample_seller(),
         auction_currency: Currency::VAC,
-        typ: AuctionType::TimedAscending(TAOptions::default_options(Currency::VAC)),
+        typ: AuctionType::TimedAscending(TAOptions::default_options()),
     };
     
     // Serialize to JSON

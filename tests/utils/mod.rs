@@ -1,9 +1,6 @@
-use auction_site::domain::{
-    AuctionType, Auction, Bid, User,
-    timed_ascending::{self},
-    single_sealed_bid::Options as SBOptions,
-    states::State
-};
+use auction_site::{domain::{
+    single_sealed_bid::Options as SBOptions, states::State, timed_ascending::{self}, Auction, AuctionType, Bid, User
+}, AmountValue};
 use auction_site::money::{Amount, Currency};
 use time::{macros::datetime, Duration, OffsetDateTime};
 // See https://users.rust-lang.org/t/sharing-code-and-macros-in-tests-directory/3098/7
@@ -66,8 +63,8 @@ pub fn vac(value: i64) -> Amount {
 }
 
 
-pub fn bid_amount_1() -> Amount {
-    sek(10)
+pub fn bid_amount_1() -> AmountValue {
+    10
 }
 
 pub fn bid_1() -> Bid {
@@ -79,8 +76,8 @@ pub fn bid_1() -> Bid {
     }
 }
 
-pub fn bid_amount_2() -> Amount {
-    sek(12)
+pub fn bid_amount_2() -> AmountValue {
+    12
 }
 
 pub fn bid_2() -> Bid {
@@ -97,7 +94,7 @@ pub fn bid_less_than_2() -> Bid {
         for_auction: sample_auction_id(),
         bidder: buyer_3(),
         at: sample_starts_at() + Duration::seconds(3),
-        bid_amount: sek(11), // Less than bid_2
+        bid_amount: 11, // Less than bid_2
     }
 }
 
@@ -114,7 +111,7 @@ pub fn sample_auction_of_type(typ: AuctionType) -> Auction {
 }
 
 pub fn sample_timed_asc_auction() -> Auction {
-    sample_auction_of_type(AuctionType::TimedAscending(timed_ascending::Options::default_options(Currency::SEK)))
+    sample_auction_of_type(AuctionType::TimedAscending(timed_ascending::Options::default_options()))
 }
 
 pub fn sample_vickrey_auction() -> Auction {

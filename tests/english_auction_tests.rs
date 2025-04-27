@@ -84,8 +84,8 @@ fn test_english_auction_states() {
 #[test]
 fn test_english_auction_type_serialization() {
     // Sample type string
-    let sample_type_str = "English|VAC0|VAC0|0";
-    let sample_type = timed_ascending::Options::default_options(Currency::VAC);
+    let sample_type_str = "English|0|0|0";
+    let sample_type = timed_ascending::Options::default_options();
     
     // Can deserialize sample type
     let parsed = timed_ascending::Options::from_str(sample_type_str).unwrap();
@@ -97,10 +97,10 @@ fn test_english_auction_type_serialization() {
     assert_eq!(sample_type.to_string(), sample_type_str);
     
     // Sample with values
-    let sample_with_values_type_str = "English|VAC10|VAC20|30";
+    let sample_with_values_type_str = "English|10|20|30";
     let sample_with_values_type = timed_ascending::Options {
-        reserve_price: Amount::new(Currency::VAC, 10),
-        min_raise: Amount::new(Currency::VAC, 20),
+        reserve_price: 10,
+        min_raise: 20,
         time_frame: Duration::seconds(30),
     };
     
@@ -126,8 +126,8 @@ fn test_english_auction_with_reserve_price() {
         auction_currency: Currency::SEK,
         typ: AuctionType::TimedAscending(
             timed_ascending::Options {
-                reserve_price: sek(15), // Reserve price higher than bids
-                min_raise: sek(0),
+                reserve_price: 15, // Reserve price higher than bids
+                min_raise: 0,
                 time_frame: Duration::seconds(0),
             }
         ),
@@ -164,8 +164,8 @@ fn test_english_auction_with_min_raise() {
         auction_currency: Currency::SEK,
         typ: AuctionType::TimedAscending(
             timed_ascending::Options {
-                reserve_price: sek(0),
-                min_raise: sek(5), // Require bids to be at least 5 higher than current
+                reserve_price: 0,
+                min_raise: 5, // Require bids to be at least 5 higher than current
                 time_frame: Duration::seconds(0),
             }
         ),
@@ -188,7 +188,7 @@ fn test_english_auction_with_min_raise() {
         for_auction: sample_auction_id(),
         bidder: buyer_2(),
         at: sample_starts_at() + Duration::seconds(2),
-        bid_amount: sek(14), // Only 4 more than first bid
+        bid_amount: 14, // Only 4 more than first bid
     };
     
     let (_, result) = state_with_bid.add_bid(small_raise_bid);
@@ -199,7 +199,7 @@ fn test_english_auction_with_min_raise() {
         for_auction: sample_auction_id(),
         bidder: buyer_2(),
         at: sample_starts_at() + Duration::seconds(2),
-        bid_amount: sek(15), // 5 more than first bid
+        bid_amount: 15, // 5 more than first bid
     };
     
     let (state_with_second_bid, result_s) = state_with_bid.add_bid(sufficient_raise_bid);
@@ -208,7 +208,7 @@ fn test_english_auction_with_min_raise() {
     // Verify the bid was accepted
     let bids = state_with_second_bid.get_bids();
     assert_eq!(bids.len(), 2);
-    assert_eq!(bids[0].bid_amount, sek(15));
+    assert_eq!(bids[0].bid_amount, 15);
 }
 
 #[test]
@@ -223,8 +223,8 @@ fn test_auction_extends_when_bids_placed_near_end() {
         auction_currency: Currency::SEK,
         typ: AuctionType::TimedAscending(
             timed_ascending::Options {
-                reserve_price: sek(0),
-                min_raise: sek(0),
+                reserve_price: 0,
+                min_raise: 0,
                 time_frame: Duration::minutes(5), // 5 minute extension when bid placed
             }
         ),
@@ -244,7 +244,7 @@ fn test_auction_extends_when_bids_placed_near_end() {
         for_auction: sample_auction_id(),
         bidder: buyer_1(),
         at: almost_ending_time,
-        bid_amount: sek(10),
+        bid_amount: 10,
     };
     
     let (state_with_bid, result) = started_state.add_bid(near_end_bid);

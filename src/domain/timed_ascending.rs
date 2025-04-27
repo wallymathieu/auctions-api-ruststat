@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use time::{Duration, OffsetDateTime};
 use std::fmt;
 use std::str::FromStr;
-use crate::money::{Amount, Currency};
+use crate::money::AmountValue;
 use super::bids::Bid;
 use super::core::{Errors, UserId};
 use super::states::State;
@@ -12,11 +12,11 @@ pub struct Options {
     /// The seller has set a minimum sale price in advance (the 'reserve' price)
     /// and the final bid does not reach that price the item remains unsold.
     /// If the reserve price is 0, that is the equivalent of not setting it.
-    pub reserve_price: Amount,
+    pub reserve_price: AmountValue,
     
     /// Sometimes the auctioneer sets a minimum amount by which the next bid must exceed the current highest bid.
     /// Having min raise equal to 0 is the equivalent of not setting it.
-    pub min_raise: Amount,
+    pub min_raise: AmountValue,
     
     /// If no competing bidder challenges the standing bid within a given time frame,
     /// the standing bid becomes the winner, and the item is sold to the highest bidder
@@ -25,10 +25,10 @@ pub struct Options {
 }
 
 impl Options {
-    pub fn default_options(currency: Currency) -> Self {
+    pub fn default_options() -> Self {
         Options {
-            reserve_price: Amount::new(currency, 0),
-            min_raise: Amount::new(currency, 0),
+            reserve_price: 0,
+            min_raise: 0,
             time_frame: Duration::seconds(0),
         }
     }
@@ -55,10 +55,10 @@ impl FromStr for Options {
             return Err(format!("Invalid TimedAscending options format: {}", s));
         }
         
-        let reserve_price = parts[1].parse::<Amount>()
+        let reserve_price = parts[1].parse::<i64>()
             .map_err(|e| format!("Invalid reserve price: {}", e))?;
             
-        let min_raise = parts[2].parse::<Amount>()
+        let min_raise = parts[2].parse::<i64>()
             .map_err(|e| format!("Invalid min raise: {}", e))?;
             
         let time_frame_seconds = parts[3].parse::<i64>()
@@ -180,7 +180,7 @@ impl State for TimedAscendingState {
                     let min_raise = options.min_raise;
                     
                     // You cannot bid lower than the current bid + minimum raise
-                    if bid_amount.value() >= (highest_amount.value() + min_raise.value()) {
+                    if bid_amount >= (highest_amount + min_raise) {
                         new_bids.insert(0, bid);
                         (
                             TimedAscendingState::OnGoing {
@@ -209,11 +209,11 @@ impl State for TimedAscendingState {
         }
     }
 
-    fn try_get_amount_and_winner(&self) -> Option<(Amount, UserId)> {
+    fn try_get_amount_and_winner(&self) -> Option<(AmountValue, UserId)> {
         match self {
             TimedAscendingState::HasEnded { bids, options, .. } => {
                 if let Some(bid) = bids.first() {
-                    if options.reserve_price.value() < bid.bid_amount.value() {
+                    if options.reserve_price < bid.bid_amount {
                         return Some((bid.bid_amount, bid.bidder.user_id().clone()));
                     }
                 }

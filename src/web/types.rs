@@ -3,7 +3,7 @@ use time::OffsetDateTime;
 use std::sync::{Arc, Mutex};
 
 use crate::domain::{Auction, AuctionId, AuctionType, Repository, User};
-use crate::money::{Currency, Amount};
+use crate::money::{Currency, Amount, AmountValue};
 use crate::domain::timed_ascending;
 
 pub type AppState = Arc<Mutex<Repository>>;
@@ -15,7 +15,7 @@ pub struct ApiError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BidRequest {
-    pub amount: i64,
+    pub amount: AmountValue,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -34,7 +34,7 @@ impl AddAuctionRequest {
     pub fn to_auction(&self, seller: User) -> Auction {
         let currency = self.currency.unwrap_or(Currency::VAC);
         let typ = self.typ.clone().unwrap_or_else(|| {
-            AuctionType::TimedAscending(timed_ascending::Options::default_options(currency))
+            AuctionType::TimedAscending(timed_ascending::Options::default_options())
         });
         
         Auction {
@@ -74,7 +74,7 @@ impl From<&Auction> for AuctionItem {
 
 #[derive(Debug, Serialize)]
 pub struct AuctionBid {
-    pub amount: Amount,
+    pub amount: AmountValue,
     pub bidder: User,
 }
 

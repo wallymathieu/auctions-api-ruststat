@@ -1,6 +1,6 @@
 // src/domain/states.rs
 use time::OffsetDateTime;
-use crate::money::Amount;
+use crate::money::AmountValue;
 use super::bids::Bid;
 use super::core::{Errors, UserId};
 use super::AuctionState;
@@ -9,7 +9,7 @@ pub trait State {
     fn inc(&self, now: OffsetDateTime) -> Self where Self: Sized;
     fn add_bid(&self, bid: Bid) -> (Self, Result<(), Errors>) where Self: Sized;
     fn get_bids(&self) -> Vec<Bid>;
-    fn try_get_amount_and_winner(&self) -> Option<(Amount, UserId)>;
+    fn try_get_amount_and_winner(&self) -> Option<(AmountValue, UserId)>;
     fn has_ended(&self) -> bool;
 }
 
@@ -26,7 +26,7 @@ pub fn get_bids(state: &AuctionState) -> Vec<Bid> {
     State::get_bids(state)
 }
 
-pub fn try_get_amount_and_winner(state: &AuctionState) -> Option<(Amount, UserId)> {
+pub fn try_get_amount_and_winner(state: &AuctionState) -> Option<(AmountValue, UserId)> {
     State::try_get_amount_and_winner(state)
 }
 

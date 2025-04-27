@@ -107,7 +107,7 @@ async fn get_auction(
             currency: auction.auction_currency,
             bids: auction_bids,
             winner,
-            winner_price,
+            winner_price: winner_price.map(|v| Amount::new(auction.auction_currency, v)),
         };
         
         Ok(HttpResponse::Ok().json(detail))
@@ -159,25 +159,11 @@ async fn place_bid(
     with_auth(req, |user| {
         let now = OffsetDateTime::now_utc();
         
-        // Determine the currency from the auction
-        let currency = {
-            let app_state = data.lock().unwrap();
-            match app_state.get(&auction_id) {
-                Some((auction, _)) => auction.auction_currency,
-                None => {
-                    let error = ApiError {
-                        message: "Auction not found".to_string(),
-                    };
-                    return Ok(HttpResponse::NotFound().json(error));
-                }
-            }
-        };
-        
         let bid = Bid {
             for_auction: auction_id,
             bidder: user,
             at: now,
-            bid_amount: Amount::new(currency, bid_req.amount),
+            bid_amount: bid_req.amount,
         };
         
         let command = Command::PlaceBid {
@@ -204,9 +190,9 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("")
             .route("/auctions", web::get().to(get_auctions))
-            .route("/auction/{id}", web::get().to(get_auction))
-            .route("/auction", web::post().to(create_auction))
-            .route("/auction/{id}/bid", web::post().to(place_bid))
+            .route("/auctions/{id}", web::get().to(get_auction))
+            .route("/auctions", web::post().to(create_auction))
+            .route("/auctions/{id}/bids", web::post().to(place_bid))
     );
 }
 

@@ -6,7 +6,7 @@ use std::str::FromStr;
 use super::bids::Bid;
 use super::core::{Errors, UserId};
 use super::states::State;
-use crate::money::Amount;
+use crate::money::AmountValue;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Options {
@@ -126,7 +126,7 @@ impl State for SingleSealedBidState{
         }
     }
 
-    fn try_get_amount_and_winner(&self) -> Option<(Amount, UserId)> {
+    fn try_get_amount_and_winner(&self) -> Option<(AmountValue, UserId)> {
         match self {
             SingleSealedBidState::AcceptingBids { .. } => None,
             SingleSealedBidState::DisclosingBids { bids, options, .. } => {

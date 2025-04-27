@@ -77,10 +77,6 @@ pub fn validate_bid(bid: &Bid, auction: &Auction) -> Result<(), Errors> {
         )));
     }
     
-    if bid.bid_amount.currency() != auction.auction_currency {
-        return Err(Errors::CurrencyConversion(auction.auction_currency));
-    }
-    
     Ok(())
 }
 
@@ -137,7 +133,7 @@ impl State for AuctionState{
         }
     }
 
-    fn try_get_amount_and_winner(&self) -> Option<(crate::Amount, super::UserId)> {
+    fn try_get_amount_and_winner(&self) -> Option<(i64, super::UserId)> {
         match self {
             AuctionState::SingleSealedBid(state) => state.try_get_amount_and_winner(),
             AuctionState::TimedAscending(state) => state.try_get_amount_and_winner()

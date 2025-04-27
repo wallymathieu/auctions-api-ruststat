@@ -114,7 +114,7 @@ fn test_vickrey_auction_with_multiple_bids() {
         for_auction: sample_auction_id(),
         bidder: buyer_2(),
         at: sample_starts_at() + Duration::seconds(2),
-        bid_amount: sek(20), // Highest bid
+        bid_amount: 20, // Highest bid
     };
     let (state_with_2_bids, _) = state_with_1_bid.add_bid(bid_highest);
     
@@ -125,7 +125,7 @@ fn test_vickrey_auction_with_multiple_bids() {
             name: "Buyer 3".to_string(),
         },
         at: sample_starts_at() + Duration::seconds(3),
-        bid_amount: sek(15), // Middle bid
+        bid_amount: 15, // Middle bid
     };
     let (state_with_3_bids, _) = state_with_2_bids.add_bid(bid_middle);
     
@@ -137,6 +137,6 @@ fn test_vickrey_auction_with_multiple_bids() {
     assert!(maybe_amount_and_winner.is_some());
     
     let (amount, winner) = maybe_amount_and_winner.unwrap();
-    assert_eq!(amount, sek(15)); // Second highest bid
+    assert_eq!(amount, 15); // Second highest bid
     assert_eq!(winner, buyer_2().user_id().clone()); // Highest bidder
 }

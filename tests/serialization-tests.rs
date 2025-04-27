@@ -25,11 +25,10 @@ fn test_read_json_commands() {
 #[test]
 fn test_auction_type_serialization() {
     // TimedAscending auction type
-    let vac0 = vac(0);
     let timed_ascending = AuctionType::TimedAscending(
         TAOptions {
-            reserve_price: vac0,
-            min_raise: vac0,
+            reserve_price: 0,
+            min_raise: 0,
             time_frame: Duration::seconds(0),
         }
     );
@@ -43,21 +42,21 @@ fn test_auction_type_serialization() {
     // Types should match
     match deserialized {
         AuctionType::TimedAscending(opts) => {
-            assert_eq!(opts.reserve_price, vac0);
-            assert_eq!(opts.min_raise, vac0);
+            assert_eq!(opts.reserve_price, 0);
+            assert_eq!(opts.min_raise, 0);
             assert_eq!(opts.time_frame, Duration::seconds(0));
         },
         _ => panic!("Expected TimedAscending type"),
     }
     
     // Also check direct string parsing
-    let type_str = "English|VAC0|VAC0|0";
+    let type_str = "English|0|0|0";
     let parsed = AuctionType::from_str(type_str).unwrap();
     
     match parsed {
         AuctionType::TimedAscending(opts) => {
-            assert_eq!(opts.reserve_price, vac0);
-            assert_eq!(opts.min_raise, vac0);
+            assert_eq!(opts.reserve_price, 0);
+            assert_eq!(opts.min_raise, 0);
             assert_eq!(opts.time_frame, Duration::seconds(0));
         },
         _ => panic!("Expected TimedAscending type"),

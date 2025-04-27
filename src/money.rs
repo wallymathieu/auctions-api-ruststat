@@ -35,10 +35,12 @@ impl FromStr for Currency {
     }
 }
 
+pub type AmountValue = i64;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Amount {
     currency: Currency,
-    value: i64,
+    value: AmountValue,
 }
 
 impl Serialize for Amount {

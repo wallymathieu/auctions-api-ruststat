@@ -87,14 +87,11 @@ pub enum Errors {
     #[error("Seller cannot place bids: {0:?}")]
     SellerCannotPlaceBids((UserId, AuctionId)),
     
-    #[error("Currency conversion error: {0:?}")]
-    CurrencyConversion(crate::money::Currency),
-    
     #[error("Invalid user data: {0}")]
     InvalidUserData(String),
     
     #[error("Must place bid over highest bid: {0:?}")]
-    MustPlaceBidOverHighestBid(crate::money::Amount),
+    MustPlaceBidOverHighestBid(i64),
     
     #[error("Already placed bid")]
     AlreadyPlacedBid,
