@@ -32,13 +32,13 @@ fn test_auction_type_serialization() {
             time_frame: Duration::seconds(0),
         }
     );
-    
+
     // Can serialize to JSON
     let serialized = to_string(&timed_ascending).unwrap();
-    
+
     // Can deserialize from JSON
     let deserialized: AuctionType = from_str(&serialized).unwrap();
-    
+
     // Types should match
     match deserialized {
         AuctionType::TimedAscending(opts) => {
@@ -48,11 +48,11 @@ fn test_auction_type_serialization() {
         },
         _ => panic!("Expected TimedAscending type"),
     }
-    
+
     // Also check direct string parsing
     let type_str = "English|0|0|0";
     let parsed = AuctionType::from_str(type_str).unwrap();
-    
+
     match parsed {
         AuctionType::TimedAscending(opts) => {
             assert_eq!(opts.reserve_price, 0);
@@ -66,14 +66,14 @@ fn test_auction_type_serialization() {
 #[test]
 fn test_amount_serialization() {
     let amount = vac(0);
-    
+
     // Can parse amount string
     let parsed = Amount::from_str("VAC0").unwrap();
     assert_eq!(parsed, amount);
-    
+
     // Can convert back to string
     assert_eq!(amount.to_string(), "VAC0");
-    
+
     // Roundtrip through JSON
     let serialized = to_string(&amount).unwrap();
     let deserialized: Amount = from_str(&serialized).unwrap();
@@ -87,18 +87,18 @@ fn test_add_auction_command_serialization() {
         timestamp: sample_starts_at(),
         auction: auction.clone(),
     };
-    
+
     // Serialize to JSON
     let serialized = to_string(&add_auction).unwrap();
-    
+
     // Verify it contains the expected data
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
     assert_eq!(json_value["$type"], "AddAuction");
     assert_eq!(json_value["at"], sample_starts_at().format(&Rfc3339).unwrap());
-    
+
     // Deserialize back
     let deserialized: Command = from_str(&serialized).unwrap();
-    
+
     // Verify it matches the original
     match deserialized {
         Command::AddAuction { timestamp, auction: deserialized_auction } => {
@@ -116,18 +116,18 @@ fn test_place_bid_command_serialization() {
         timestamp: sample_bid_time(),
         bid: bid.clone(),
     };
-    
+
     // Serialize to JSON
     let serialized = to_string(&place_bid).unwrap();
-    
+
     // Verify it contains the expected data
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
     assert_eq!(json_value["$type"], "PlaceBid");
     assert_eq!(json_value["at"], sample_bid_time().format(&Rfc3339).unwrap());
-    
+
     // Deserialize back
     let deserialized: Command = from_str(&serialized).unwrap();
-    
+
     // Verify it matches the original
     match deserialized {
         Command::PlaceBid { timestamp, bid: deserialized_bid } => {
@@ -146,17 +146,17 @@ fn test_command_success_serialization() {
         timestamp: sample_starts_at(),
         auction: auction.clone(),
     };
-    
+
     // Serialize to JSON
     let serialized = to_string(&auction_added).unwrap();
-    
+
     // Verify it contains the expected data
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
     assert_eq!(json_value["$type"], "AuctionAdded");
-    
+
     // Deserialize back
     let deserialized: CommandSuccess = from_str(&serialized).unwrap();
-    
+
     // Verify it matches the original
     match deserialized {
         CommandSuccess::AuctionAdded { timestamp, auction: deserialized_auction } => {
@@ -165,24 +165,24 @@ fn test_command_success_serialization() {
         },
         _ => panic!("Expected AuctionAdded success"),
     }
-    
+
     // BidAccepted success
     let bid = bid_1();
     let bid_accepted = CommandSuccess::BidAccepted {
         timestamp: sample_bid_time(),
         bid: bid.clone(),
     };
-    
+
     // Serialize to JSON
     let serialized = to_string(&bid_accepted).unwrap();
-    
+
     // Verify it contains the expected data
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
     assert_eq!(json_value["$type"], "BidAccepted");
-    
+
     // Deserialize back
     let deserialized: CommandSuccess = from_str(&serialized).unwrap();
-    
+
     // Verify it matches the original
     match deserialized {
         CommandSuccess::BidAccepted { timestamp, bid: deserialized_bid } => {
@@ -196,33 +196,33 @@ fn test_command_success_serialization() {
 #[test]
 fn test_write_and_read_commands() {
     let test_file = "./test_commands.jsonl";
-    
+
     // Create commands to write
     let auction = sample_vickrey_auction();
     let add_auction = Command::AddAuction {
         timestamp: sample_starts_at(),
         auction: auction.clone(),
     };
-    
+
     let bid = bid_1();
     let place_bid = Command::PlaceBid {
         timestamp: sample_bid_time(),
         bid: bid.clone(),
     };
-    
+
     let commands = vec![add_auction, place_bid];
-    
+
     // Write commands to file
     let write_result = write_commands(test_file, &commands);
     assert!(write_result.is_ok());
-    
+
     // Read commands back from file
     let read_result = read_commands(test_file);
     assert!(read_result.is_ok());
-    
+
     let read_commands = read_result.unwrap();
     assert_eq!(read_commands.len(), 2);
-    
+
     // Clean up test file
     if Path::new(test_file).exists() {
         fs::remove_file(test_file).unwrap();
@@ -236,13 +236,13 @@ fn test_user_serialization() {
         user_id: "user123".to_string(),
         name: "John Doe".to_string(),
     };
-    
+
     let serialized = to_string(&buyer).unwrap();
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
-    
+
     // Format should be a string with pipe separators
     assert_eq!(json_value, "BuyerOrSeller|user123|John Doe");
-    
+
     let deserialized: User = from_str(&serialized).unwrap();
     match deserialized {
         User::BuyerOrSeller { user_id, name } => {
@@ -251,18 +251,18 @@ fn test_user_serialization() {
         },
         _ => panic!("Expected BuyerOrSeller"),
     }
-    
+
     // Support
     let support = User::Support {
         user_id: "support123".to_string(),
     };
-    
+
     let serialized = to_string(&support).unwrap();
     let json_value = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
-    
+
     // Format should be a string with pipe separators
     assert_eq!(json_value, "Support|support123");
-    
+
     let deserialized: User = from_str(&serialized).unwrap();
     match deserialized {
         User::Support { user_id } => {

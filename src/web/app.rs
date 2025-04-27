@@ -1,7 +1,5 @@
-use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Result};
-use actix_web::middleware::Logger;
+use actix_web::{web, HttpRequest, HttpResponse, Result};
 use base64::{Engine as _, engine::general_purpose};
-use log::info;
 use serde_json::Value;
 use time::OffsetDateTime;
 use std::sync::{Arc, Mutex};
@@ -194,24 +192,4 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
             .route("/auctions", web::post().to(create_auction))
             .route("/auctions/{id}/bids", web::post().to(place_bid))
     );
-}
-
-// Main application
-pub async fn run_app(port: u16) -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
-    
-    let app_state = init_app_state();
-    
-    info!("Starting server on port {}", port);
-    
-    HttpServer::new(move || {
-        App::new()
-            .app_data(web::Data::new(app_state.clone()))
-            .wrap(Logger::default())
-            .configure(configure_app)
-    })
-    .bind(("127.0.0.1", port))?
-    .run()
-    .await
 }

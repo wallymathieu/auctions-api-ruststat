@@ -8,7 +8,6 @@ use time::Duration;
 use utils::*;
 // Sample data for tests
 
-
 #[test]
 fn test_blind_auction_states() {
     let blind_auction = sample_blind_auction();
@@ -16,18 +15,18 @@ fn test_blind_auction_states() {
         AuctionState::SingleSealedBid(state) => state,
         _ => panic!("Expected SingleSealedBid state"),
     };
-    
+
     // Can add bid to empty state
     let (state_with_1_bid, result_1) = empty_blind_auction_state.add_bid(bid_1());
     assert!(result_1.is_ok());
-    
+
     // Can add second bid
     let (state_with_2_bids, result_2) = state_with_1_bid.add_bid(bid_2());
     assert!(result_2.is_ok());
-    
+
     // Can end
     let state_ended_after_two_bids = state_with_2_bids.inc(sample_ends_at());
-    
+
     // Verify the state is now DisclosingBids
     match &state_ended_after_two_bids {
         SBState::DisclosingBids { bids, expiry, options } => {
@@ -40,16 +39,16 @@ fn test_blind_auction_states() {
         },
         _ => panic!("Expected DisclosingBids state"),
     }
-    
+
     // Can get winner and price from an ended auction
     let maybe_amount_and_winner = state_ended_after_two_bids.try_get_amount_and_winner();
     assert!(maybe_amount_and_winner.is_some());
-    
+
     let (amount, winner) = maybe_amount_and_winner.unwrap();
     // In a blind auction, winner pays their own bid (highest)
     assert_eq!(amount, bid_amount_2());
     assert_eq!(winner, buyer_2().user_id().clone());
-    
+
     // Test the increment spec
     test_increment_spec(&empty_blind_auction_state);
 }
@@ -61,11 +60,11 @@ fn test_cannot_place_duplicate_bids() {
         AuctionState::SingleSealedBid(state) => state,
         _ => panic!("Expected SingleSealedBid state"),
     };
-    
+
     // First bid is accepted
     let (state_with_bid, result) = empty_blind_auction_state.add_bid(bid_1());
     assert!(result.is_ok());
-    
+
     // Same bidder cannot place a second bid
     let duplicate_bid = Bid {
         for_auction: sample_auction_id(),
@@ -73,10 +72,10 @@ fn test_cannot_place_duplicate_bids() {
         at: sample_bid_time(),
         bid_amount: 15, // Different amount
     };
-    
+
     let (_, result) = state_with_bid.add_bid(duplicate_bid);
     assert!(result.is_err());
-    
+
     // Verify the error is AlreadyPlacedBid
     match result {
         Err(auction_site::domain::core::Errors::AlreadyPlacedBid) => {},
@@ -91,10 +90,10 @@ fn test_cannot_bid_after_end() {
         AuctionState::SingleSealedBid(state) => state,
         _ => panic!("Expected SingleSealedBid state"),
     };
-    
+
     // Advance state to ended
     let ended_state = empty_blind_auction_state.inc(sample_ends_at() + Duration::seconds(1));
-    
+
     // Try to place a bid after end
     let late_bid = Bid {
         for_auction: sample_auction_id(),
@@ -102,9 +101,9 @@ fn test_cannot_bid_after_end() {
         at: sample_ends_at() + Duration::seconds(2),
         bid_amount: 10,
     };
-    
+
     let (_, result) = ended_state.add_bid(late_bid);
-    
+
     // Should get AuctionHasEnded error
     assert!(result.is_err());
     match result {
