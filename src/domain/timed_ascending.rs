@@ -157,7 +157,10 @@ impl State for TimedAscendingState {
             },
             TimedAscendingState::OnGoing { bids, next_expiry, options } => {
                 let mut new_bids = bids.clone();
-                let new_expiry = std::cmp::max(*next_expiry, extension_expiry);
+                let new_expiry = std::cmp::max(
+                    *next_expiry,
+                    now + options.time_frame
+                );
 
                 if bids.is_empty() {
                     // First bid is always accepted
