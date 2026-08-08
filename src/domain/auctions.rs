@@ -90,7 +90,11 @@ pub fn empty_state(auction: &Auction) -> AuctionState {
     match &auction.typ {
         AuctionType::SingleSealedBid(opt) => {
             AuctionState::SingleSealedBid(
-                super::single_sealed_bid::empty_state(auction.expiry, opt.clone())
+                super::single_sealed_bid::empty_state(
+                    auction.starts_at,
+                    auction.expiry,
+                    opt.clone(),
+                )
             )
         },
         AuctionType::TimedAscending(opt) => {

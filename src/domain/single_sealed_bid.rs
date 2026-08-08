@@ -47,6 +47,7 @@ impl FromStr for Options {
 pub enum SingleSealedBidState {
     AcceptingBids {
         bids: HashMap<UserId, Bid>,
+        start: OffsetDateTime,
         expiry: OffsetDateTime,
         options: Options,
     },
@@ -57,9 +58,14 @@ pub enum SingleSealedBidState {
     },
 }
 
-pub fn empty_state(expiry: OffsetDateTime, options: Options) -> SingleSealedBidState {
+pub fn empty_state(
+    start: OffsetDateTime,
+    expiry: OffsetDateTime,
+    options: Options,
+) -> SingleSealedBidState {
     SingleSealedBidState::AcceptingBids {
         bids: HashMap::new(),
+        start,
         expiry,
         options,
     }
@@ -69,11 +75,16 @@ impl State for SingleSealedBidState{
 
     fn inc(&self, now: OffsetDateTime) -> Self {
         match self {
-            SingleSealedBidState::AcceptingBids { bids, expiry, options } => {
+            SingleSealedBidState::AcceptingBids { bids, start, expiry, options } => {
                 if now >= *expiry {
                     // Sort bids by amount (highest first)
                     let mut sorted_bids = bids.values().cloned().collect::<Vec<_>>();
-                    sorted_bids.sort_by(|a, b| b.bid_amount.cmp(&a.bid_amount));
+                    sorted_bids.sort_by(|a, b| {
+                        b.bid_amount
+                            .cmp(&a.bid_amount)
+                            .then_with(|| a.at.cmp(&b.at))
+                            .then_with(|| a.bidder.user_id().cmp(b.bidder.user_id()))
+                    });
                     
                     SingleSealedBidState::DisclosingBids {
                         bids: sorted_bids,
@@ -81,7 +92,12 @@ impl State for SingleSealedBidState{
                         options: options.clone(),
                     }
                 } else {
-                    self.clone()
+                    SingleSealedBidState::AcceptingBids {
+                        bids: bids.clone(),
+                        start: *start,
+                        expiry: *expiry,
+                        options: options.clone(),
+                    }
                 }
             },
             SingleSealedBidState::DisclosingBids { .. } => self.clone(),
@@ -96,7 +112,7 @@ impl State for SingleSealedBidState{
         let next = self.inc(now);
         
         match &next {
-            SingleSealedBidState::AcceptingBids { bids, expiry, options } => {
+            SingleSealedBidState::AcceptingBids { bids, start, expiry, options } => {
                 if bids.contains_key(&user) {
                     return (next, Err(Errors::AlreadyPlacedBid));
                 }
@@ -107,6 +123,7 @@ impl State for SingleSealedBidState{
                 (
                     SingleSealedBidState::AcceptingBids {
                         bids: new_bids,
+                        start: *start,
                         expiry: *expiry,
                         options: options.clone(),
                     },
