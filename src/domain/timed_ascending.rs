@@ -103,7 +103,7 @@ impl State for TimedAscendingState {
     fn inc(&self, now: OffsetDateTime) -> Self {
         match self {
             TimedAscendingState::AwaitingStart { start, starting_expiry, options } => {
-                if now >= *start {
+                if now > *start {
                     if now < *starting_expiry {
                         // AwaitingStart -> OnGoing
                         TimedAscendingState::OnGoing {
