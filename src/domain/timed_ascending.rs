@@ -213,7 +213,7 @@ impl State for TimedAscendingState {
         match self {
             TimedAscendingState::HasEnded { bids, options, .. } => {
                 if let Some(bid) = bids.first() {
-                    if options.reserve_price <= bid.bid_amount {
+                    if options.reserve_price < bid.bid_amount {
                         return Some((bid.bid_amount, bid.bidder.user_id().clone()));
                     }
                 }
