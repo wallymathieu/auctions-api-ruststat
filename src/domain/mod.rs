@@ -47,12 +47,11 @@ pub fn handle(command: Command, repository: &mut Repository) -> Result<Event, Ha
             match repository.get_mut(&auction_id) {
                 Some((auction, state)) => {
                     validate_bid(&bid, auction)?;
-
-                    let (next_auction_state, bid_result) = state.add_bid(bid.clone());
-                    bid_result?;
-
-                    *state = next_auction_state;
-                    Ok(Event::BidAccepted { timestamp, bid })
+                    let bid_result;
+                    (*state, bid_result) = state.add_bid(bid.clone());
+                    bid_result
+                        .map(|()| Event::BidAccepted { timestamp, bid })
+                        .map_err(HandleError::from)
                 }
                 None => Err(HandleError::from(Errors::UnknownAuction(auction_id))),
             }
