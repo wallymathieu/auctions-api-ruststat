@@ -113,6 +113,10 @@ impl State for SingleSealedBidState{
         
         match &next {
             SingleSealedBidState::AcceptingBids { bids, start, expiry, options } => {
+                if now <= *start {
+                    return (next, Err(Errors::AuctionHasNotStarted(auction_id)));
+                }
+
                 if bids.contains_key(&user) {
                     return (next, Err(Errors::AlreadyPlacedBid));
                 }

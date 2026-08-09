@@ -84,6 +84,34 @@ fn test_cannot_place_duplicate_bids() {
 }
 
 #[test]
+fn test_cannot_bid_before_start() {
+    let blind_auction = sample_blind_auction();
+    let empty_blind_auction_state = match empty_state(&blind_auction) {
+        AuctionState::SingleSealedBid(state) => state,
+        _ => panic!("Expected SingleSealedBid state"),
+    };
+
+    // Try to place a bid before the auction starts
+    let early_bid = Bid {
+        for_auction: sample_auction_id(),
+        bidder: buyer_1(),
+        at: sample_starts_at() - Duration::seconds(1),
+        bid_amount: 10,
+    };
+
+    let (_, result) = empty_blind_auction_state.add_bid(early_bid);
+
+    // Should get AuctionHasNotStarted error, same as a timed ascending auction
+    assert!(result.is_err());
+    match result {
+        Err(auction_site::domain::core::Errors::AuctionHasNotStarted(id)) => {
+            assert_eq!(id, sample_auction_id());
+        },
+        _ => panic!("Expected AuctionHasNotStarted error"),
+    }
+}
+
+#[test]
 fn test_cannot_bid_after_end() {
     let blind_auction = sample_blind_auction();
     let empty_blind_auction_state = match empty_state(&blind_auction) {
