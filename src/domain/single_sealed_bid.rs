@@ -76,7 +76,7 @@ impl State for SingleSealedBidState{
     fn inc(&self, now: OffsetDateTime) -> Self {
         match self {
             SingleSealedBidState::AcceptingBids { bids, start, expiry, options } => {
-                if now > *expiry {
+                if now >= *expiry {
                     // Sort bids by amount (highest first)
                     let mut sorted_bids = bids.values().cloned().collect::<Vec<_>>();
                     sorted_bids.sort_by(|a, b| {
