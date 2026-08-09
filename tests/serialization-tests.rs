@@ -139,8 +139,8 @@ fn test_place_bid_command_serialization() {
 }
 
 #[test]
-fn test_command_success_serialization() {
-    // AuctionAdded success
+fn test_event_serialization() {
+    // AuctionAdded event
     let auction = sample_vickrey_auction();
     let auction_added = Event::AuctionAdded {
         timestamp: sample_starts_at(),
@@ -163,10 +163,10 @@ fn test_command_success_serialization() {
             assert_eq!(timestamp, sample_starts_at());
             assert_eq!(deserialized_auction, auction);
         },
-        _ => panic!("Expected AuctionAdded success"),
+        _ => panic!("Expected AuctionAdded event"),
     }
 
-    // BidAccepted success
+    // BidAccepted event
     let bid = bid_1();
     let bid_accepted = Event::BidAccepted {
         timestamp: sample_bid_time(),
@@ -189,7 +189,7 @@ fn test_command_success_serialization() {
             assert_eq!(timestamp, sample_bid_time());
             assert_eq!(deserialized_bid, bid);
         },
-        _ => panic!("Expected BidAccepted success"),
+        _ => panic!("Expected BidAccepted event"),
     }
 }
 

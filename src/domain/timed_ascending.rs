@@ -13,11 +13,11 @@ pub struct Options {
     /// and the final bid does not reach that price the item remains unsold.
     /// If the reserve price is 0, that is the equivalent of not setting it.
     pub reserve_price: AmountValue,
-    
+
     /// Sometimes the auctioneer sets a minimum amount by which the next bid must exceed the current highest bid.
     /// Having min raise equal to 0 is the equivalent of not setting it.
     pub min_raise: AmountValue,
-    
+
     /// If no competing bidder challenges the standing bid within a given time frame,
     /// the standing bid becomes the winner, and the item is sold to the highest bidder
     /// at a price equal to his or her bid.
@@ -37,7 +37,7 @@ impl Options {
 impl fmt::Display for Options {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
-            f, 
+            f,
             "English|{}|{}|{}",
             self.reserve_price,
             self.min_raise,
@@ -54,16 +54,16 @@ impl FromStr for Options {
         if parts.len() != 4 || parts[0] != "English" {
             return Err(format!("Invalid TimedAscending options format: {}", s));
         }
-        
+
         let reserve_price = parts[1].parse::<i64>()
             .map_err(|e| format!("Invalid reserve price: {}", e))?;
-            
+
         let min_raise = parts[2].parse::<i64>()
             .map_err(|e| format!("Invalid min raise: {}", e))?;
-            
+
         let time_frame_seconds = parts[3].parse::<i64>()
             .map_err(|_| format!("Invalid time frame: {}", parts[3]))?;
-            
+
         Ok(Options {
             reserve_price,
             min_raise,
@@ -148,9 +148,9 @@ impl State for TimedAscendingState {
         let now = bid.at;
         let auction_id = bid.for_auction;
         let bid_amount = bid.bid_amount;
-        
+
         let next = self.inc(now);
-        
+
         match &next {
             TimedAscendingState::AwaitingStart { .. } => {
                 (next, Err(Errors::AuctionHasNotStarted(auction_id)))
@@ -161,7 +161,7 @@ impl State for TimedAscendingState {
                     *next_expiry,
                     now + options.time_frame
                 );
-                
+
                 if bids.is_empty() {
                     // First bid is always accepted
                     new_bids.insert(0, bid);
@@ -178,7 +178,7 @@ impl State for TimedAscendingState {
                     let highest_bid = &bids[0];
                     let highest_amount = highest_bid.bid_amount;
                     let min_raise = options.min_raise;
-                    
+
                     // You cannot bid lower than the current bid + minimum raise
                     if bid_amount >= (highest_amount + min_raise) {
                         new_bids.insert(0, bid);
@@ -224,10 +224,6 @@ impl State for TimedAscendingState {
     }
 
     fn has_ended(&self) -> bool {
-        match self {
-            TimedAscendingState::HasEnded { .. } => true,
-            _ => false,
-        }
+        matches!(self, TimedAscendingState::HasEnded { .. })
     }
 }
-

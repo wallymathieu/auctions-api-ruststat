@@ -7,6 +7,7 @@ pub mod states;
 pub mod timed_ascending;
 pub mod single_sealed_bid;
 
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use thiserror::Error;
 
@@ -18,41 +19,39 @@ pub use self::states::*;
 
 pub type Repository = HashMap<AuctionId, (Auction, AuctionState)>;
 
-pub fn auctions(repository: &Repository) -> Vec<Auction> {
-    repository.values().map(|(auction, _)| auction.clone()).collect()
-}
-
 #[derive(Debug, Error)]
 pub enum HandleError {
     #[error("Auction error: {0}")]
     AuctionError(#[from] Errors),
 }
 
-pub fn handle(command: Command, mut repository: Repository) -> Result<(Event, Repository), HandleError> {
+pub fn handle(command: Command, repository: &mut Repository) -> Result<Event, HandleError> {
     match command {
         Command::AddAuction { timestamp, auction } => {
             let auction_id = auction.auction_id;
-            if !repository.contains_key(&auction_id) {
-                let empty = empty_state(&auction);
-                repository.insert(auction_id, (auction.clone(), empty));
+            match repository.entry(auction_id) {
+                Entry::Vacant(entry) => {
+                    let empty = empty_state(&auction);
+                    entry.insert((auction.clone(), empty));
 
-                Ok((Event::AuctionAdded { timestamp:timestamp, auction }, repository))
-            } else {
-                Err(HandleError::from(Errors::AuctionAlreadyExists(auction_id)))
+                    Ok(Event::AuctionAdded { timestamp, auction })
+                }
+                Entry::Occupied(_) => {
+                    Err(HandleError::from(Errors::AuctionAlreadyExists(auction_id)))
+                }
             }
         }
 
         Command::PlaceBid { timestamp, bid } => {
             let auction_id = bid.for_auction;
-            match repository.get(&auction_id) {
+            match repository.get_mut(&auction_id) {
                 Some((auction, state)) => {
                     validate_bid(&bid, auction)?;
-
-                    let (next_auction_state, bid_result) = State::add_bid(&state.clone(), bid.clone());
-                    bid_result?;
-
-                    repository.insert(auction_id, (auction.clone(), next_auction_state));
-                    Ok((Event::BidAccepted { timestamp, bid }, repository))
+                    let bid_result;
+                    (*state, bid_result) = state.add_bid(bid.clone());
+                    bid_result
+                        .map(|()| Event::BidAccepted { timestamp, bid })
+                        .map_err(HandleError::from)
                 }
                 None => Err(HandleError::from(Errors::UnknownAuction(auction_id))),
             }

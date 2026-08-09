@@ -5,7 +5,7 @@ use time::OffsetDateTime;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
-use crate::domain::{auctions, AuctionId, Bid, Command, User, handle};
+use crate::domain::{AuctionId, Bid, Command, User, handle};
 use crate::domain::states::State;
 use crate::money::Amount;
 use super::types::{AddAuctionRequest, ApiError, AppState, AuctionBid, AuctionDetail, AuctionItem, BidRequest};
@@ -65,9 +65,9 @@ where
 // Get all auctions
 async fn get_auctions(data: web::Data<AppState>) -> Result<HttpResponse> {
     let app_state = data.lock().unwrap();
-    let auction_list: Vec<AuctionItem> = auctions(&app_state)
-        .iter()
-        .map(|a| AuctionItem::from(a))
+    let auction_list: Vec<AuctionItem> = app_state
+        .values()
+        .map(|(auction, _)| AuctionItem::from(auction))
         .collect();
 
     Ok(HttpResponse::Ok().json(auction_list))
@@ -79,18 +79,20 @@ async fn get_auction(
     data: web::Data<AppState>
 ) -> Result<HttpResponse> {
     let auction_id = path.into_inner();
-    let app_state = data.lock().unwrap();
+    let mut app_state = data.lock().unwrap();
 
-    if let Some((auction, auction_state)) = app_state.get(&auction_id) {
+    if let Some((auction, auction_state)) = app_state.get_mut(&auction_id) {
+        *auction_state = auction_state.inc(OffsetDateTime::now_utc());
         let bids = State::get_bids(auction_state);
         let winner_and_price = State::try_get_amount_and_winner(auction_state);
 
-        let auction_bids = bids.iter().map(|bid| {
-            AuctionBid {
+        let auction_bids = bids
+            .into_iter()
+            .map(|bid| AuctionBid {
                 amount: bid.bid_amount,
-                bidder: bid.bidder.clone(),
-            }
-        }).collect();
+                bidder: bid.bidder,
+            })
+            .collect();
 
         let (winner, winner_price) = match winner_and_price {
             Some((amount, user_id)) => (Some(user_id), Some(amount)),
@@ -133,10 +135,9 @@ async fn create_auction(
 
         let mut app_state = data.lock().unwrap();
 
-        match handle(command, app_state.clone()) {
-            Ok((success, new_state)) => {
-                *app_state = new_state;
-                Ok(HttpResponse::Ok().json(success))
+        match handle(command, &mut app_state) {
+            Ok(event) => {
+                Ok(HttpResponse::Ok().json(event))
             },
             Err(err) => {
                 Ok(HttpResponse::BadRequest().body(format!("{}", err)))
@@ -171,10 +172,9 @@ async fn place_bid(
 
         let mut app_state = data.lock().unwrap();
 
-        match handle(command, app_state.clone()) {
-            Ok((success, new_state)) => {
-                *app_state = new_state;
-                Ok(HttpResponse::Ok().json(success))
+        match handle(command, &mut app_state) {
+            Ok(event) => {
+                Ok(HttpResponse::Ok().json(event))
             },
             Err(err) => {
                 Ok(HttpResponse::BadRequest().body(format!("{}", err)))

@@ -5,7 +5,7 @@ use auction_site::domain::{
     AuctionState, empty_state,
     core::Errors
 };
-use auction_site::money::{Amount, Currency};
+use auction_site::money::Currency;
 use time::Duration;
 use std::str::FromStr;
 #[path="utils/mod.rs"] mod utils;
