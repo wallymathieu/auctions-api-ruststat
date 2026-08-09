@@ -45,9 +45,13 @@ impl FromStr for Options {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SingleSealedBidState {
+    AwaitingStart {
+        start: OffsetDateTime,
+        expiry: OffsetDateTime,
+        options: Options,
+    },
     AcceptingBids {
         bids: HashMap<UserId, Bid>,
-        start: OffsetDateTime,
         expiry: OffsetDateTime,
         options: Options,
     },
@@ -63,8 +67,7 @@ pub fn empty_state(
     expiry: OffsetDateTime,
     options: Options,
 ) -> SingleSealedBidState {
-    SingleSealedBidState::AcceptingBids {
-        bids: HashMap::new(),
+    SingleSealedBidState::AwaitingStart {
         start,
         expiry,
         options,
@@ -75,7 +78,29 @@ impl State for SingleSealedBidState{
 
     fn inc(&self, now: OffsetDateTime) -> Self {
         match self {
-            SingleSealedBidState::AcceptingBids { bids, start, expiry, options } => {
+            SingleSealedBidState::AwaitingStart { start, expiry, options } => {
+                if now > *start {
+                    if now < *expiry {
+                        // AwaitingStart -> AcceptingBids
+                        SingleSealedBidState::AcceptingBids {
+                            bids: HashMap::new(),
+                            expiry: *expiry,
+                            options: options.clone(),
+                        }
+                    } else {
+                        // AwaitingStart -> DisclosingBids
+                        SingleSealedBidState::DisclosingBids {
+                            bids: Vec::new(),
+                            expiry: *expiry,
+                            options: options.clone(),
+                        }
+                    }
+                } else {
+                    // AwaitingStart -> AwaitingStart
+                    self.clone()
+                }
+            },
+            SingleSealedBidState::AcceptingBids { bids, expiry, options } => {
                 if now >= *expiry {
                     // Sort bids by amount (highest first)
                     let mut sorted_bids = bids.values().cloned().collect::<Vec<_>>();
@@ -85,19 +110,15 @@ impl State for SingleSealedBidState{
                             .then_with(|| a.at.cmp(&b.at))
                             .then_with(|| a.bidder.user_id().cmp(b.bidder.user_id()))
                     });
-                    
+
                     SingleSealedBidState::DisclosingBids {
                         bids: sorted_bids,
                         expiry: *expiry,
                         options: options.clone(),
                     }
                 } else {
-                    SingleSealedBidState::AcceptingBids {
-                        bids: bids.clone(),
-                        start: *start,
-                        expiry: *expiry,
-                        options: options.clone(),
-                    }
+                    // AcceptingBids -> AcceptingBids
+                    self.clone()
                 }
             },
             SingleSealedBidState::DisclosingBids { .. } => self.clone(),
@@ -112,22 +133,20 @@ impl State for SingleSealedBidState{
         let next = self.inc(now);
         
         match &next {
-            SingleSealedBidState::AcceptingBids { bids, start, expiry, options } => {
-                if now <= *start {
-                    return (next, Err(Errors::AuctionHasNotStarted(auction_id)));
-                }
-
+            SingleSealedBidState::AwaitingStart { .. } => {
+                (next, Err(Errors::AuctionHasNotStarted(auction_id)))
+            },
+            SingleSealedBidState::AcceptingBids { bids, expiry, options } => {
                 if bids.contains_key(&user) {
                     return (next, Err(Errors::AlreadyPlacedBid));
                 }
-                
+
                 let mut new_bids = bids.clone();
                 new_bids.insert(user, bid);
-                
+
                 (
                     SingleSealedBidState::AcceptingBids {
                         bids: new_bids,
-                        start: *start,
                         expiry: *expiry,
                         options: options.clone(),
                     },
@@ -149,6 +168,7 @@ impl State for SingleSealedBidState{
 
     fn try_get_amount_and_winner(&self) -> Option<(AmountValue, UserId)> {
         match self {
+            SingleSealedBidState::AwaitingStart { .. } => None,
             SingleSealedBidState::AcceptingBids { .. } => None,
             SingleSealedBidState::DisclosingBids { bids, options, .. } => {
                 if bids.is_empty() {
@@ -175,10 +195,7 @@ impl State for SingleSealedBidState{
     }
 
     fn has_ended(&self) -> bool {
-        match self {
-            SingleSealedBidState::AcceptingBids { .. } => false,
-            SingleSealedBidState::DisclosingBids { .. } => true,
-        }
+        matches!(self, SingleSealedBidState::DisclosingBids { .. })
     }
 
 }
